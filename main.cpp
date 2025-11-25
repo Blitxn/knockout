@@ -1,55 +1,38 @@
-#include <iostream>
+#include "Bracket.hpp"
 #include <vector>
-#include "bracket.hpp"
 using namespace std;
 
 int main() {
     vector<string> players = {"Anna","Ben","Chou","Dara","Ean","Faye","Gita","Hout"};
     Bracket tournament(players);
 
-    cout << "=== INITIAL BRACKET ===\n";
-    tournament.printBracket();
+    // Leaf matches (matches 8–15)
+    tournament.recordResult(8, "Anna");
+    tournament.recordResult(9, "Ben");
+    tournament.recordResult(10, "Chou");
+    tournament.recordResult(11, "Dara");
+    tournament.recordResult(12, "Ean");
+    tournament.recordResult(13, "Faye");
+    tournament.recordResult(14, "Gita");
+    tournament.recordResult(15, "Hout");
 
-    // ROUND 1 RESULTS
-    cout << "\n=== ROUND 1 RESULTS ===\n";
-    vector<pair<int,string>> round1 = {
-        {8,"Anna"}, {9,"Ben"}, {10,"Chou"}, {11,"Dara"},
-        {12,"Ean"}, {13,"Faye"}, {14,"Gita"}, {15,"Hout"}
-    };
-    for (auto &r : round1) {
-        cout << r.second << " automatically advances from first round!\n";
-        tournament.recordResult(r.first, r.second);
-    }
-    tournament.printBracket();
+    // Quarterfinals
+    tournament.recordResult(4, "Anna");
+    tournament.recordResult(5, "Chou");
+    tournament.recordResult(6, "Faye");
+    tournament.recordResult(7, "Hout");
 
-    // QUARTERFINALS
-    cout << "\n=== QUARTERFINALS ===\n";
-    vector<pair<int,string>> quarterfinals = {
-        {4,"Anna"}, {5,"Gita"}, {6,"Faye"}, {7,"Hout"}
-    };
-    for (auto &q : quarterfinals) {
-        cout << q.second << " wins the quarterfinal match!\n";
-        tournament.recordResult(q.first, q.second);
-    }
-    tournament.printBracket();
+    // Semifinals
+    tournament.recordResult(2, "Anna");
+    tournament.recordResult(3, "Faye");
 
-    // SEMIFINALS
-    cout << "\n=== SEMIFINALS ===\n";
-    vector<pair<int,string>> semifinals = {
-        {2,"Anna"}, {3,"Faye"}
-    };
-    for (auto &s : semifinals) {
-        cout << s.second << " wins the semifinal match!\n";
-        tournament.recordResult(s.first, s.second);
-    }
-    tournament.printBracket();
+    // Final
+    tournament.recordResult(1, "Anna");
 
-    // FINAL
-    cout << "\n=== FINAL ===\n";
-    cout << "Anna wins the final and is the champion!\n";
-    tournament.recordResult(1,"Anna");
+    // Print bracket
     tournament.printBracket();
-
-    return 0;
 }
+
+
+
 

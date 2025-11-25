@@ -4,7 +4,6 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <cmath>
 using namespace std;
 
 struct Node {
@@ -15,111 +14,90 @@ struct Node {
 
 class Bracket {
 private:
-    vector<Node> rounds;  
-    int leafStart;       
+    vector<Node> rounds;
+    int leafStart; // first leaf match
+    int numPlayers;
 
 public:
     Bracket(const vector<string>& players) {
-        int n = players.size();
-        int L = 1;
-        while (L < n) L *= 2;              
-        int totalMatches = 2*L - 1;         
-        rounds.resize(totalMatches + 1);    
-        leafStart = totalMatches - L + 1;
-        for (int i = 0; i < L; i++) {
-            rounds[leafStart + i].leftPlayer = (i < n) ? players[i] : "BYE";
-            rounds[leafStart + i].rightPlayer = "BYE";
-            rounds[leafStart + i].winner = rounds[leafStart + i].leftPlayer;
+        numPlayers = players.size(); // 8 players
+        int totalMatches = numPlayers - 1; // internal matches
+        int totalNodes = totalMatches + numPlayers; // total matches
+        rounds.resize(totalNodes + 1); // 1-based indexing
+
+        leafStart = totalMatches + 1; // first leaf match
+
+        // Leaves: players
+        for (int i = 0; i < numPlayers; i++) {
+            rounds[leafStart + i].leftPlayer = players[i];
+            rounds[leafStart + i].rightPlayer = "";
+            rounds[leafStart + i].winner = players[i]; // initially, the player themselves
         }
+
+        // Internal matches placeholders
         for (int i = leafStart - 1; i >= 1; i--) {
-            rounds[i].leftPlayer = "?";
-            rounds[i].rightPlayer = "?";
+            int left = 2 * i;
+            int right = 2 * i + 1;
+            rounds[i].leftPlayer = left < rounds.size() ? rounds[left].winner : "?";
+            rounds[i].rightPlayer = right < rounds.size() ? rounds[right].winner : "?";
             rounds[i].winner = "?";
         }
     }
 
     void recordResult(int matchId, const string& winner) {
-        Node &m = rounds[matchId];
-        if (m.winner != "?") {
-            cout << "Cannot record match " << matchId << ", already decided!\n";
-            return;
-        }
+        rounds[matchId].winner = winner;
 
-        if (m.leftPlayer == "?" || m.rightPlayer == "?") {
-            cout << "Cannot record match " << matchId << ", participants not ready!\n";
-            return;
-        }
-
-        if (m.leftPlayer == "BYE") m.winner = m.rightPlayer;
-        else if (m.rightPlayer == "BYE") m.winner = m.leftPlayer;
-        else m.winner = winner;
+        // Update parent matches
         int parent = matchId / 2;
         while (parent >= 1) {
-            int left = 2*parent, right = 2*parent + 1;
-            rounds[parent].leftPlayer = rounds[left].winner;
-            rounds[parent].rightPlayer = rounds[right].winner;
-            rounds[parent].winner = "?"; 
+            int left = 2 * parent;
+            int right = 2 * parent + 1;
+            string leftWinner = left < rounds.size() ? rounds[left].winner : "?";
+            string rightWinner = right < rounds.size() ? rounds[right].winner : "?";
+            rounds[parent].leftPlayer = leftWinner;
+            rounds[parent].rightPlayer = rightWinner;
+            rounds[parent].winner = "?";
             parent /= 2;
         }
     }
 
     void printBracket() {
-        cout << "\n=== TOURNAMENT BRACKET ===\n";
-        for (int i = 1; i < rounds.size(); i++) {
-            string left = rounds[i].leftPlayer;
-            string right = rounds[i].rightPlayer;
-            string winner = rounds[i].winner;
+        cout << "=== TOURNAMENT BRACKET ===\n\n";
 
-            if (right == "BYE") {
-                cout << "Match " << i << ": " << left << " has a BYE  " << left << " advances!\n";
-            } else if (winner != "?") {
-                cout << "Match " << i << ": " << left << " vs " << right << "  " << winner << " wins!\n";
-            } else {
-                cout << "Match " << i << ": " << left << " vs " << right << "  match not yet played\n";
-            }
+        // Quarterfinals: matches 4-7
+        cout << "Quarterfinals:\n";
+        for (int i = 4; i <= 7; i++) {
+            cout << "Match " << i << ": " << rounds[i].leftPlayer
+                 << " vs " << rounds[i].rightPlayer
+                 << " -> Winner: " << rounds[i].winner << "\n";
         }
-    }
+        cout << "\n";
 
-    pair<int,int> wouldMeet(const string &a, const string &b) {
-        int indexA=-1, indexB=-1;
-        for (int i=1;i<rounds.size();i++){
-            if (rounds[i].winner == a) indexA=i;
-            if (rounds[i].winner == b) indexB=i;
+        // Semifinals: matches 2-3
+        cout << "Semifinals:\n";
+        for (int i = 2; i <= 3; i++) {
+            cout << "Match " << i << ": " << rounds[i].leftPlayer
+                 << " vs " << rounds[i].rightPlayer
+                 << " -> Winner: " << rounds[i].winner << "\n";
         }
-        if(indexA==-1) {
-            for (int i=leafStart;i<rounds.size();i++){
-                if (rounds[i].leftPlayer==a) indexA=i;
-            }
-        }
-        if(indexB==-1){
-            for (int i=leafStart;i<rounds.size();i++){
-                if (rounds[i].leftPlayer==b) indexB=i;
-            }
-        }
-        int x=indexA, y=indexB;
-        while(x!=y){ x/=2; y/=2; }
-        int meetMatch=x;
-        int totalRounds = log2(rounds.size());
-        int meetLevel = log2(meetMatch);
-        int roundNumber = totalRounds - meetLevel;
-        return {meetMatch, roundNumber};
-    }
+        cout << "\n";
 
-    vector<int> pathToFinal(const string &player) {
-        vector<int> path;
-        int index=-1;
-        for (int i=leafStart;i<rounds.size();i++){
-            if (rounds[i].leftPlayer==player) index=i;
-        }
-        while(index>=1){
-            path.push_back(index);
-            index/=2;
-        }
-        return path;
+        // Final: match 1
+        cout << "Final:\n";
+        cout << "Match 1: " << rounds[1].leftPlayer
+             << " vs " << rounds[1].rightPlayer
+             << " -> Winner: " << rounds[1].winner << "\n\n";
+
+        cout << "Champion: " << rounds[1].winner << "!\n";
     }
 };
 
 #endif
+
+
+
+
+
 
 
 
